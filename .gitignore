@@ -1,0 +1,19 @@
+# Credentials and secrets
+.env
+bots/*/config.json
+
+# Generated files
+docker-compose.yml
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

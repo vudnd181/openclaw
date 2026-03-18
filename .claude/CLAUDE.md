@@ -135,3 +135,11 @@ Three layers of protection when adding a new bot:
 - `docker-compose.yml` is gitignored because it's generated. Don't edit it manually.
 - `bots/*/config.json` is gitignored because it contains the API key.
 - Uses `docker compose` (v2, no hyphen) — the modern standard.
+
+
+## Check 
+- Get Gateway token: docker exec openclaw-bot-duc cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+- Paring:  docker exec openclaw-bot-duc /usr/local/bin/openclaw pairing approve telegram TQRM4GM9
+- Quick approve command for next time:
+  docker exec -u node openclaw-bot-duc /usr/local/bin/openclaw devices list
+  docker exec -u node openclaw-bot-duc /usr/local/bin/openclaw devices approve <REQUEST_ID>

@@ -49,7 +49,8 @@ OpenClaw uses a **JSON config file** (`config.json`), not environment variables,
 | `models.providers.claudible.apiKey` | Claudible API key (shared, from `.env`) |
 | `models.providers.claudible.api` | Must be `"openai-completions"` |
 | `agents.defaults.model.primary` | Default model (format: `claudible/model-id`) |
-| `channels.telegram.allowFrom` | Telegram user IDs allowed to use the bot |
+| `channels.telegram.dmPolicy` | `"open"` — anyone can DM the bot |
+| `channels.telegram.allowFrom` | `["*"]` — all Telegram user IDs allowed |
 | `gateway.port` | `18789` (internal) |
 | `gateway.bind` | `0.0.0.0` (required in Docker) |
 
@@ -137,9 +138,14 @@ Three layers of protection when adding a new bot:
 - Uses `docker compose` (v2, no hyphen) — the modern standard.
 
 
-## Check 
-- Get Gateway token: docker exec openclaw-bot-duc cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
-- Paring:  docker exec openclaw-bot-duc /usr/local/bin/openclaw pairing approve telegram TQRM4GM9
-- Quick approve command for next time:
+## Check
+- Get Gateway token:
+  ```bash
+  docker exec -u node openclaw-bot-duc cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+  ```
+- Approve device (browser dashboard):
+  ```bash
   docker exec -u node openclaw-bot-duc /usr/local/bin/openclaw devices list
-  docker exec -u node openclaw-bot-duc /usr/local/bin/openclaw devices approve <REQUEST_ID>
+  docker exec -u node openclaw-bot-vu2 /usr/local/bin/openclaw devices approve <REQUEST_ID>
+  ```
+- Telegram DM policy is `"open"` with `allowFrom: ["*"]` — no pairing needed, anyone can message the bot.

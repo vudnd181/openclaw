@@ -19,6 +19,7 @@ services:
     volumes:
       - openclaw-bot-vu:/home/node/.openclaw
       - ./bots/vu/config.json:/config/config.json:ro
+      - ./bots/vu/zalo-messages:/home/node/.openclaw/workspace/zalo-messages.jsonl
     mem_limit: 1536m
     memswap_limit: 11g
     restart: unless-stopped

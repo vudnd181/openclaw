@@ -62,6 +62,8 @@ while IFS=' ' read -r bot_name port_offset; do
     volumes:
       - ${SERVICE_NAME}:/home/node/.openclaw
       - ./bots/${bot_name}/config.json:/config/config.json:ro
+    mem_limit: 1g
+    memswap_limit: 11g
     restart: unless-stopped
 
 EOF

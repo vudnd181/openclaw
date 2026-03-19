@@ -2,9 +2,6 @@
 .env
 bots/*/config.json
 
-# Generated files
-docker-compose.yml
-
 # macOS
 .DS_Store
 

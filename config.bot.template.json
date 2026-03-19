@@ -64,16 +64,16 @@
   "channels": {
     "telegram": {
       "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": ["*"],
-      "groupPolicy": "open",
+      "dmPolicy": "allowlist",
+      "allowFrom": ["ALLOWED_CHAT_IDS"],
+      "groupPolicy": "allowlist",
       "streaming": "partial",
       "accounts": {
         "default": {
-          "dmPolicy": "open",
-          "allowFrom": ["*"],
+          "dmPolicy": "allowlist",
+          "allowFrom": ["ALLOWED_CHAT_IDS"],
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
-          "groupPolicy": "open",
+          "groupPolicy": "allowlist",
           "streaming": "partial"
         }
       }

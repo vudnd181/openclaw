@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name> <telegram_token>
-# Example: ./deploy-bot.sh alice 123456:ABC
+# Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids>
+# Example: ./deploy-bot.sh alice 123456:ABC 658635669,123456789
 #
 # The Claudible API key is read from CLAUDIBLE_API_KEY in .env (shared by all bots).
 
@@ -16,19 +16,21 @@ BASE_PORT=18789
 # --- Argument Parsing ---
 BOT_NAME="${1:-}"
 TELEGRAM_TOKEN="${2:-}"
+CHAT_IDS="${3:-}"
 
-if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token>"
+if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ] || [ -z "$CHAT_IDS" ]; then
+    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids>"
     echo ""
     echo "Arguments:"
     echo "  bot_name        Unique name for the bot (e.g., alice, support-bot)"
     echo "  telegram_token  Telegram bot token from @BotFather"
+    echo "  chat_ids        Comma-separated Telegram user/chat IDs to allow"
     echo ""
     echo "The Claudible API key is read from CLAUDIBLE_API_KEY in .env"
-    echo "DM policy is open — all Telegram users are allowed by default."
     echo ""
-    echo "Example:"
-    echo "  ./deploy-bot.sh alice 123456:ABC"
+    echo "Examples:"
+    echo "  ./deploy-bot.sh alice 123456:ABC 658635669"
+    echo "  ./deploy-bot.sh alice 123456:ABC 658635669,123456789,987654321"
     exit 1
 fi
 
@@ -85,9 +87,13 @@ mkdir -p "$BOTS_DIR/$BOT_NAME"
 # --- Generate config.json from template ---
 SECRET_TOKEN=$(openssl rand -hex 32)
 
+# Convert comma-separated IDs to JSON array format: 123,456 → "123","456"
+ALLOW_FROM_JSON=$(echo "$CHAT_IDS" | sed 's/,/","/g')
+
 sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
+    -e "s|ALLOWED_CHAT_IDS|${ALLOW_FROM_JSON}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 
 echo "✅ Generated bots/$BOT_NAME/config.json"

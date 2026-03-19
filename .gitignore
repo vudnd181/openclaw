@@ -1,6 +1,9 @@
 # Credentials and secrets
 .env
 
+# Bot configs (contain API keys and tokens)
+bots/
+
 # macOS
 .DS_Store
 

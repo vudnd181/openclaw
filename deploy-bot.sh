@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_id>
-# Example: ./deploy-bot.sh alice 123456:ABC 658635669
+# Usage: ./deploy-bot.sh <bot_name> <telegram_token>
+# Example: ./deploy-bot.sh alice 123456:ABC
 #
 # The Claudible API key is read from CLAUDIBLE_API_KEY in .env (shared by all bots).
 
@@ -16,20 +16,19 @@ BASE_PORT=18789
 # --- Argument Parsing ---
 BOT_NAME="${1:-}"
 TELEGRAM_TOKEN="${2:-}"
-TELEGRAM_CHAT_ID="${3:-}"
 
-if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_id>"
+if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ]; then
+    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token>"
     echo ""
     echo "Arguments:"
     echo "  bot_name        Unique name for the bot (e.g., alice, support-bot)"
     echo "  telegram_token  Telegram bot token from @BotFather"
-    echo "  chat_id         Telegram user/chat ID to allow"
     echo ""
     echo "The Claudible API key is read from CLAUDIBLE_API_KEY in .env"
+    echo "DM policy is open — all Telegram users are allowed by default."
     echo ""
     echo "Example:"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669"
+    echo "  ./deploy-bot.sh alice 123456:ABC"
     exit 1
 fi
 
@@ -88,7 +87,6 @@ SECRET_TOKEN=$(openssl rand -hex 32)
 
 sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
-    -e "s|YOUR_TELEGRAM_USER_ID|${TELEGRAM_CHAT_ID}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 

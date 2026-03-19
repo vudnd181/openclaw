@@ -84,7 +84,8 @@
     "mode": "local",
     "bind": "lan",
     "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "allowedOrigins": ["http://localhost:18789"]
     },
     "auth": {
       "mode": "token",

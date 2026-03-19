@@ -13,6 +13,7 @@ services:
     container_name: openclaw-bot-duc
     environment:
       - TELEGRAM_BOT_TOKEN=${TOKEN_DUC}
+      - NODE_OPTIONS=--max-old-space-size=1536
     ports:
       - "18789:18789"
     volumes:
@@ -30,6 +31,7 @@ services:
     container_name: openclaw-bot-vu2
     environment:
       - TELEGRAM_BOT_TOKEN=${TOKEN_VU2}
+      - NODE_OPTIONS=--max-old-space-size=1536
     ports:
       - "18790:18789"
     volumes:

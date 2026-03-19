@@ -57,6 +57,7 @@ while IFS=' ' read -r bot_name port_offset; do
     container_name: ${SERVICE_NAME}
     environment:
       - TELEGRAM_BOT_TOKEN=\${TOKEN_${ENV_VAR_SUFFIX}}
+      - NODE_OPTIONS=--max-old-space-size=1536
     ports:
       - "${EXTERNAL_PORT}:18789"
     volumes:

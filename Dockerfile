@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies and OpenClaw
 # git is required by openclaw's npm dependencies; su-exec for dropping privileges
-RUN apk add --no-cache curl git su-exec sudo && npm install -g openclaw@latest \
+RUN apk add --no-cache curl git su-exec sudo python3 py3-pip && npm install -g openclaw@latest \
 && echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Create workspace

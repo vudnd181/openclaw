@@ -57,13 +57,13 @@ while IFS=' ' read -r bot_name port_offset; do
     container_name: ${SERVICE_NAME}
     environment:
       - TELEGRAM_BOT_TOKEN=\${TOKEN_${ENV_VAR_SUFFIX}}
-      - NODE_OPTIONS=--max-old-space-size=768
+      - NODE_OPTIONS=--max-old-space-size=1280
     ports:
       - "${EXTERNAL_PORT}:18789"
     volumes:
       - ${SERVICE_NAME}:/home/node/.openclaw
       - ./bots/${bot_name}/config.json:/config/config.json:ro
-    mem_limit: 1g
+    mem_limit: 1536m
     memswap_limit: 11g
     restart: unless-stopped
 

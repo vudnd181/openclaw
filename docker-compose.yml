@@ -13,13 +13,13 @@ services:
     container_name: openclaw-bot-duc
     environment:
       - TELEGRAM_BOT_TOKEN=${TOKEN_DUC}
-      - NODE_OPTIONS=--max-old-space-size=1536
+      - NODE_OPTIONS=--max-old-space-size=384
     ports:
       - "18789:18789"
     volumes:
       - openclaw-bot-duc:/home/node/.openclaw
       - ./bots/duc/config.json:/config/config.json:ro
-    mem_limit: 2g
+    mem_limit: 512m
     memswap_limit: 11g
     restart: unless-stopped
 
@@ -31,13 +31,13 @@ services:
     container_name: openclaw-bot-vu2
     environment:
       - TELEGRAM_BOT_TOKEN=${TOKEN_VU2}
-      - NODE_OPTIONS=--max-old-space-size=1536
+      - NODE_OPTIONS=--max-old-space-size=384
     ports:
       - "18790:18789"
     volumes:
       - openclaw-bot-vu2:/home/node/.openclaw
       - ./bots/vu2/config.json:/config/config.json:ro
-    mem_limit: 2g
+    mem_limit: 512m
     memswap_limit: 11g
     restart: unless-stopped
 

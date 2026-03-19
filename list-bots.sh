@@ -10,7 +10,7 @@ BASE_PORT=18789
 
 if [ ! -f "$PORT_REGISTRY" ] || [ ! -s "$PORT_REGISTRY" ]; then
     echo "No bots registered. Deploy one with:"
-    echo "  ./deploy-bot.sh <name> <telegram_token>"
+    echo "  ./deploy-bot.sh <name> <telegram_token> <chat_ids>"
     exit 0
 fi
 

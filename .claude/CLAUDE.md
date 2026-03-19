@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Docker-based deployment setup for running **OpenClaw** Telegram bots. OpenClaw is an npm-installable CLI tool that provides a gateway connecting to any OpenAI-compatible API endpoint (in this case, **Claudible**). The system is fully scalable — add or remove bots with a single command, without affecting running instances.
 
-All bots share a **single Claudible API key** (defined once in `.env`). Each bot has its own Telegram token.
+All bots share a **single Claudible API key** (defined once in `.env`). Each bot has its own Telegram token and allowed chat IDs.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ openclaw_docker/
 ├── config.bot.template.json    # Config template with placeholder values
 ├── docker-compose.yml          # AUTO-GENERATED — never edit manually
 ├── generate-compose.sh         # Generates docker-compose.yml from bots/
-├── deploy-bot.sh               # Single-command bot deployment (2 args)
+├── deploy-bot.sh               # Single-command bot deployment (3 args)
 ├── remove-bot.sh               # Clean bot removal
 ├── list-bots.sh                # Show all bots and their status
 ├── .env                        # Shared API key + per-bot Telegram tokens (gitignored)
@@ -49,8 +49,8 @@ OpenClaw uses a **JSON config file** (`config.json`), not environment variables,
 | `models.providers.claudible.apiKey` | Claudible API key (shared, from `.env`) |
 | `models.providers.claudible.api` | Must be `"openai-completions"` |
 | `agents.defaults.model.primary` | Default model (format: `claudible/model-id`) |
-| `channels.telegram.dmPolicy` | `"open"` — anyone can DM the bot |
-| `channels.telegram.allowFrom` | `["*"]` — all Telegram user IDs allowed |
+| `channels.telegram.dmPolicy` | `"allowlist"` — only allowed chat IDs can DM |
+| `channels.telegram.allowFrom` | List of specific Telegram user/chat IDs |
 | `gateway.port` | `18789` (internal) |
 | `gateway.bind` | `0.0.0.0` (required in Docker) |
 
@@ -73,13 +73,15 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot (single command — 2 args only)
+### Deploy a new bot (single command — 3 args)
 ```bash
-./deploy-bot.sh <name> <telegram_token>
-# Example:
-./deploy-bot.sh alice 987654:XYZ
+./deploy-bot.sh <name> <telegram_token> <chat_ids>
+# Example (single user):
+./deploy-bot.sh alice 987654:XYZ 658635669
+# Example (multiple users, comma-separated):
+./deploy-bot.sh alice 987654:XYZ 658635669,123456789
 ```
-The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. DM policy is open (`allowFrom: ["*"]`) — no chat ID needed. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
+The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. Chat IDs are comma-separated Telegram user IDs that are allowed to interact with the bot. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
 
 ### Remove a bot
 ```bash
@@ -148,4 +150,4 @@ Three layers of protection when adding a new bot:
   docker exec -u node openclaw-bot-duc /usr/local/bin/openclaw devices list
   docker exec -u node openclaw-bot-vu2 /usr/local/bin/openclaw devices approve <REQUEST_ID>
   ```
-- Telegram DM policy is `"open"` with `allowFrom: ["*"]` — no pairing needed, anyone can message the bot.
+- Telegram DM policy is `"allowlist"` — only specified chat IDs can message the bot.

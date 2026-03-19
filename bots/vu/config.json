@@ -1,6 +1,6 @@
 {
   "env": {
-    "TELEGRAM_BOT_TOKEN": "8768008353:AAGfdOKdoRcHER4vJUEGmDfG0P2tTK7EEs8"
+    "TELEGRAM_BOT_TOKEN": "8415580820:AAEL4Q1p7wS8vL6ZYGc8sKDGQw1OrpJ7PrQ"
   },
   "models": {
     "providers": {
@@ -64,16 +64,16 @@
   "channels": {
     "telegram": {
       "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": ["*"],
-      "groupPolicy": "open",
+      "dmPolicy": "allowlist",
+      "allowFrom": ["658635669"],
+      "groupPolicy": "allowlist",
       "streaming": "partial",
       "accounts": {
         "default": {
-          "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "botToken": "8768008353:AAGfdOKdoRcHER4vJUEGmDfG0P2tTK7EEs8",
-          "groupPolicy": "open",
+          "dmPolicy": "allowlist",
+          "allowFrom": ["658635669"],
+          "botToken": "8415580820:AAEL4Q1p7wS8vL6ZYGc8sKDGQw1OrpJ7PrQ",
+          "groupPolicy": "allowlist",
           "streaming": "partial"
         }
       }
@@ -89,7 +89,7 @@
     },
     "auth": {
       "mode": "token",
-      "token": "35bce96f69732149ef1104008630e5a9f89d53951203108f695db50a78aa9d9d"
+      "token": "e50db6cb587120e072c961901c22e15ebe5e1b105f104bcd6088557bf5e96356"
     },
     "tailscale": {
       "mode": "off",

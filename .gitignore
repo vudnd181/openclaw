@@ -1,6 +1,5 @@
 # Credentials and secrets
 .env
-bots/*/config.json
 
 # macOS
 .DS_Store

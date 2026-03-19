@@ -1,0 +1,106 @@
+{
+  "env": {
+    "TELEGRAM_BOT_TOKEN": "8768008353:AAGfdOKdoRcHER4vJUEGmDfG0P2tTK7EEs8"
+  },
+  "models": {
+    "providers": {
+      "claudible": {
+        "baseUrl": "https://claudible.io/v1",
+        "apiKey": "sk-7de45ba998f2d1dcdc4e30de911a5fd70544e5ffa2450ce06957273297d4c994",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "claude-sonnet-4.6",
+            "name": "Claude Sonnet 4.6",
+            "api": "openai-completions",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          },
+          {
+            "id": "claude-opus-4.6",
+            "name": "Claude Opus 4.6",
+            "api": "openai-completions",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          },
+          {
+            "id": "claude-haiku-4.5",
+            "name": "Claude Haiku 4.5",
+            "api": "openai-completions",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "claudible/claude-sonnet-4.6"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "groupPolicy": "open",
+      "streaming": "partial",
+      "accounts": {
+        "default": {
+          "dmPolicy": "open",
+          "allowFrom": ["*"],
+          "botToken": "8768008353:AAGfdOKdoRcHER4vJUEGmDfG0P2tTK7EEs8",
+          "groupPolicy": "open",
+          "streaming": "partial"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "allowedOrigins": ["http://localhost:18789"]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "35bce96f69732149ef1104008630e5a9f89d53951203108f695db50a78aa9d9d"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Docker-based deployment setup for running **OpenClaw** Telegram bots. OpenClaw is an npm-installable CLI tool that provides a gateway connecting to any OpenAI-compatible API endpoint (in this case, **Claudible**). The system is fully scalable — add or remove bots with a single command, without affecting running instances.
 
-All bots share a **single Claudible API key** (defined once in `.env`). Each bot has its own Telegram token and chat ID.
+All bots share a **single Claudible API key** (defined once in `.env`). Each bot has its own Telegram token.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ openclaw_docker/
 ├── config.bot.template.json    # Config template with placeholder values
 ├── docker-compose.yml          # AUTO-GENERATED — never edit manually
 ├── generate-compose.sh         # Generates docker-compose.yml from bots/
-├── deploy-bot.sh               # Single-command bot deployment (3 args)
+├── deploy-bot.sh               # Single-command bot deployment (2 args)
 ├── remove-bot.sh               # Clean bot removal
 ├── list-bots.sh                # Show all bots and their status
 ├── .env                        # Shared API key + per-bot Telegram tokens (gitignored)
@@ -73,13 +73,13 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot (single command — 3 args only)
+### Deploy a new bot (single command — 2 args only)
 ```bash
-./deploy-bot.sh <name> <telegram_token> <chat_id>
+./deploy-bot.sh <name> <telegram_token>
 # Example:
-./deploy-bot.sh alice 987654:XYZ 658635669
+./deploy-bot.sh alice 987654:XYZ
 ```
-The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
+The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. DM policy is open (`allowFrom: ["*"]`) — no chat ID needed. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
 
 ### Remove a bot
 ```bash

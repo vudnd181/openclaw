@@ -4,6 +4,8 @@
 # Bot configs (contain API keys and tokens)
 bots/
 
+docker-compose.yml
+
 # macOS
 .DS_Store
 

@@ -118,10 +118,31 @@ echo "✅ Added TOKEN_${ENV_VAR_SUFFIX} to .env"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" build "openclaw-bot-${BOT_NAME}"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --no-deps "openclaw-bot-${BOT_NAME}"
 
+# --- Reload nginx to pick up new bot config ---
+NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
+if [ -f "$NGINX_ENV" ]; then
+    DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
+fi
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-dashboard.example.com}"
+
+NGINX_CONTAINER="bot-nginx"
+if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
+    if docker exec "$NGINX_CONTAINER" nginx -t 2>/dev/null; then
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+        echo "✅ Nginx reloaded with config for ${BOT_NAME}.${DEPLOY_DOMAIN}"
+    else
+        echo "⚠️  Nginx config test failed. Check nginx/conf.d/${BOT_NAME}.conf"
+        echo "   Run: docker exec $NGINX_CONTAINER nginx -t"
+    fi
+else
+    echo "ℹ️  Nginx not running. Start it with: cd ../nginx && docker compose up -d"
+fi
+
 echo ""
 echo "🚀 Bot '$BOT_NAME' is now running!"
-echo "   Container: openclaw-bot-${BOT_NAME}"
-echo "   Port:      $EXTERNAL_PORT → 18789 (internal)"
-echo "   Config:    bots/$BOT_NAME/config.json"
+echo "   Container:  openclaw-bot-${BOT_NAME}"
+echo "   Port:       $EXTERNAL_PORT → 18789 (internal)"
+echo "   Dashboard:  https://${BOT_NAME}.${DEPLOY_DOMAIN}"
+echo "   Config:     bots/$BOT_NAME/config.json"
 echo ""
 echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"

@@ -74,5 +74,23 @@ echo "✅ Removed from .env"
 # --- Regenerate docker-compose.yml ---
 "$SCRIPT_DIR/generate-compose.sh"
 
+# --- Reload nginx (stale config already removed by generate-compose.sh) ---
+NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
+if [ -f "$NGINX_ENV" ]; then
+    DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
+fi
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-dashboard.example.com}"
+
+NGINX_CONTAINER="bot-nginx"
+if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
+    if docker exec "$NGINX_CONTAINER" nginx -t 2>/dev/null; then
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+        echo "✅ Nginx reloaded (removed ${BOT_NAME}.${DEPLOY_DOMAIN})"
+    else
+        echo "⚠️  Nginx config test failed after removal. Check manually:"
+        echo "   docker exec $NGINX_CONTAINER nginx -t"
+    fi
+fi
+
 echo ""
 echo "🗑️  Bot '$BOT_NAME' has been removed."

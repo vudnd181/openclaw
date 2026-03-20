@@ -96,6 +96,11 @@
       "resetOnExit": false
     }
   },
+  "tools": {
+    "elevated": {
+      "enabled": true
+    }
+  },
   "plugins": {
     "entries": {
       "telegram": {

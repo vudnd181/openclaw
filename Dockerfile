@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g openclaw@latest && \
+    npm install -g --os=linux --cpu=x64 sharp && \
     echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 RUN mkdir -p /home/node/.openclaw/workspace && chown -R node:node /home/node/.openclaw

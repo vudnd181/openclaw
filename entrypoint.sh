@@ -12,6 +12,13 @@ chown -R node:node /home/node/.openclaw 2>/dev/null || true
 mkdir -p /home/node/.openclaw/workspace 2>/dev/null || true
 chown node:node /home/node/.openclaw/workspace 2>/dev/null || true
 
+# Apply elevated tools config
+su-exec node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/dev/null || true
+su-exec node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
+
+# Configure web section
+su-exec node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
+
 # Drop to node user and start OpenClaw gateway in foreground
 # --bind lan binds to 0.0.0.0 so Docker port mapping works
 exec su-exec node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789

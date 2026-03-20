@@ -16,6 +16,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=1280
     ports:
       - "18789:18789"
+      - "18927:18927"
     volumes:
       - openclaw-bot-vu:/home/node/.openclaw
       - ./bots/vu/config.json:/config/config.json:ro

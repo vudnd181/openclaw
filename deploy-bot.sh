@@ -148,3 +148,28 @@ fi
 echo "   Config:     bots/$BOT_NAME/config.json"
 echo ""
 echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"
+
+# --- Wait for bot to be healthy, then start auto-approve ---
+echo ""
+echo "⏳ Waiting for bot to start (health check)..."
+HEALTH_TIMEOUT=30
+HEALTH_ELAPSED=0
+while [ "$HEALTH_ELAPSED" -lt "$HEALTH_TIMEOUT" ]; do
+    if docker exec "openclaw-bot-${BOT_NAME}" curl -sf http://localhost:18789/health &>/dev/null; then
+        echo "✅ Bot is healthy!"
+        break
+    fi
+    sleep 2
+    HEALTH_ELAPSED=$((HEALTH_ELAPSED + 2))
+done
+
+if [ "$HEALTH_ELAPSED" -ge "$HEALTH_TIMEOUT" ]; then
+    echo "⚠️  Bot not healthy yet. You can pair manually later:"
+    echo "   ./auto-approve.sh $BOT_NAME --wait"
+else
+    echo ""
+    echo "🔗 Open the dashboard in your browser, then device will be auto-approved."
+    echo "   Starting auto-approve (60s timeout)..."
+    echo ""
+    "$SCRIPT_DIR/auto-approve.sh" "$BOT_NAME" --wait || true
+fi

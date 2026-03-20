@@ -1,25 +1,26 @@
-FROM node:22-alpine
+FROM node:22
 
 WORKDIR /app
 
-# Install dependencies and OpenClaw
-# git is required by openclaw's npm dependencies; su-exec for dropping privileges
-RUN apk add --no-cache curl git su-exec sudo python3 py3-pip && npm install -g openclaw@latest \
-&& echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN apt-get update && apt-get install -y \
+    curl git sudo python3 python3-pip \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libgbm1 libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0 \
+    fonts-liberation libappindicator3-1 libx11-xcb1 \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm install -g openclaw@latest && \
+    echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create workspace
 RUN mkdir -p /home/node/.openclaw/workspace && chown -R node:node /home/node/.openclaw
 
-# Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Expose gateway port
 EXPOSE 18789
 EXPOSE 18927
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-CMD curl -f http://localhost:18789/health || exit 1
+    CMD curl -f http://localhost:18789/health || exit 1
 
-# Entrypoint fixes volume permissions then drops to node user
 ENTRYPOINT ["entrypoint.sh"]

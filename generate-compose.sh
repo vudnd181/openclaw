@@ -85,6 +85,8 @@ while IFS=' ' read -r bot_name port_offset; do
       - ./bots/${bot_name}/config.json:/config/config.json:ro
     mem_limit: 1536m
     memswap_limit: 11g
+    security_opt:
+      - seccomp:unconfined
     restart: unless-stopped
     networks:
       - bot-proxy-net

@@ -102,6 +102,7 @@
     }
   },
   "plugins": {
+    "allow": "*",
     "entries": {
       "telegram": {
         "enabled": true

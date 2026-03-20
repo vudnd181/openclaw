@@ -46,7 +46,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "claudible/claude-sonnet-4.6"
+        "primary": "claudible/claude-haiku-4.5"
       },
       "maxConcurrent": 4,
       "subagents": {

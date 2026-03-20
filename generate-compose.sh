@@ -102,12 +102,17 @@ EOF
 # Bot: ${bot_name} → ${bot_name}.${DOMAIN}
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name ${bot_name}.${DOMAIN};
 
     ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -227,9 +232,7 @@ http {
     ssl_session_timeout 1d;
     ssl_session_tickets off;
 
-    # OCSP stapling
-    ssl_stapling on;
-    ssl_stapling_verify on;
+    # DNS resolver (for OCSP stapling in server blocks)
     resolver 8.8.8.8 8.8.4.4 valid=300s;
     resolver_timeout 5s;
 

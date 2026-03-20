@@ -79,7 +79,7 @@ NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
 if [ -f "$NGINX_ENV" ]; then
     DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
 fi
-DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-dashboard.example.com}"
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-}"
 
 NGINX_CONTAINER="bot-nginx"
 if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then

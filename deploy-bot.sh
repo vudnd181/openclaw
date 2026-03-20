@@ -123,7 +123,7 @@ NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
 if [ -f "$NGINX_ENV" ]; then
     DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
 fi
-DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-dashboard.example.com}"
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-}"
 
 NGINX_CONTAINER="bot-nginx"
 if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
@@ -142,7 +142,9 @@ echo ""
 echo "🚀 Bot '$BOT_NAME' is now running!"
 echo "   Container:  openclaw-bot-${BOT_NAME}"
 echo "   Port:       $EXTERNAL_PORT → 18789 (internal)"
-echo "   Dashboard:  https://${BOT_NAME}.${DEPLOY_DOMAIN}"
+if [ -n "$DEPLOY_DOMAIN" ]; then
+    echo "   Dashboard:  https://${BOT_NAME}.${DEPLOY_DOMAIN}"
+fi
 echo "   Config:     bots/$BOT_NAME/config.json"
 echo ""
 echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"

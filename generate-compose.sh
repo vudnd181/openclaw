@@ -18,7 +18,12 @@ NGINX_ENV="$NGINX_DIR/.env"
 if [ -f "$NGINX_ENV" ]; then
     DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
 fi
-DOMAIN="${DOMAIN:-dashboard.example.com}"
+
+if [ -z "${DOMAIN:-}" ]; then
+    echo "❌ DOMAIN not set. Configure it in nginx/.env"
+    echo "   DOMAIN=yourdomain.com"
+    exit 1
+fi
 
 if [ ! -f "$PORT_REGISTRY" ] || [ ! -s "$PORT_REGISTRY" ]; then
     echo "⚠️  No bots registered. Run deploy-bot.sh first."

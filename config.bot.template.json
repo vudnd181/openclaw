@@ -15,7 +15,12 @@
             "api": "openai-completions",
             "reasoning": false,
             "input": ["text", "image"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 16384
           },
@@ -25,7 +30,12 @@
             "api": "openai-completions",
             "reasoning": false,
             "input": ["text", "image"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 16384
           },
@@ -35,7 +45,12 @@
             "api": "openai-completions",
             "reasoning": false,
             "input": ["text", "image"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 16384
           }
@@ -46,7 +61,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "claudible/claude-haiku-4.5"
+        "primary": "claudible/SELECTED_MODEL"
       },
       "maxConcurrent": 4,
       "subagents": {

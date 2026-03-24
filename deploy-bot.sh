@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids>
+# Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids> [model]
 # Example: ./deploy-bot.sh alice 123456:ABC 658635669,123456789
+# Example: ./deploy-bot.sh alice 123456:ABC 658635669 claude-sonnet-4.6
 #
 # The Claudible API key is read from CLAUDIBLE_API_KEY in .env (shared by all bots).
+# Available models: claude-haiku-4.5 (default), claude-sonnet-4.6, claude-opus-4.6
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOTS_DIR="$SCRIPT_DIR/bots"
@@ -17,19 +19,42 @@ BASE_PORT=18789
 BOT_NAME="${1:-}"
 TELEGRAM_TOKEN="${2:-}"
 CHAT_IDS="${3:-}"
+MODEL="${4:-claude-haiku-4.5}"
+
+# Validate model name
+VALID_MODELS=("claude-haiku-4.5" "claude-sonnet-4.6" "claude-opus-4.6")
+MODEL_VALID=false
+for m in "${VALID_MODELS[@]}"; do
+    if [ "$MODEL" = "$m" ]; then
+        MODEL_VALID=true
+        break
+    fi
+done
+if [ "$MODEL_VALID" = false ]; then
+    echo "❌ Invalid model: $MODEL"
+    echo "   Available models: ${VALID_MODELS[*]}"
+    exit 1
+fi
 
 if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ] || [ -z "$CHAT_IDS" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids>"
+    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids> [model]"
     echo ""
     echo "Arguments:"
     echo "  bot_name        Unique name for the bot (e.g., alice, support-bot)"
     echo "  telegram_token  Telegram bot token from @BotFather"
     echo "  chat_ids        Comma-separated Telegram user/chat IDs to allow"
+    echo "  model           Model to use (optional, default: claude-haiku-4.5)"
+    echo ""
+    echo "Available models:"
+    echo "  claude-haiku-4.5   (default — fast & cheap)"
+    echo "  claude-sonnet-4.6  (balanced)"
+    echo "  claude-opus-4.6    (most capable)"
     echo ""
     echo "The Claudible API key is read from CLAUDIBLE_API_KEY in .env"
     echo ""
     echo "Examples:"
     echo "  ./deploy-bot.sh alice 123456:ABC 658635669"
+    echo "  ./deploy-bot.sh alice 123456:ABC 658635669 claude-sonnet-4.6"
     echo "  ./deploy-bot.sh alice 123456:ABC 658635669,123456789,987654321"
     exit 1
 fi
@@ -94,9 +119,10 @@ sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
     -e "s|ALLOWED_CHAT_IDS|${ALLOW_FROM_JSON}|g" \
+    -e "s|SELECTED_MODEL|${MODEL}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 
-echo "✅ Generated bots/$BOT_NAME/config.json"
+echo "✅ Generated bots/$BOT_NAME/config.json (model: $MODEL)"
 
 # --- Register port ---
 echo "$BOT_NAME $NEXT_OFFSET" >> "$PORT_REGISTRY"
@@ -118,10 +144,59 @@ echo "✅ Added TOKEN_${ENV_VAR_SUFFIX} to .env"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" build "openclaw-bot-${BOT_NAME}"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --no-deps "openclaw-bot-${BOT_NAME}"
 
+# --- Reload nginx to pick up new bot config ---
+NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
+if [ -f "$NGINX_ENV" ]; then
+    DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
+fi
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-}"
+
+NGINX_CONTAINER="bot-nginx"
+if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
+    if docker exec "$NGINX_CONTAINER" nginx -t 2>/dev/null; then
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+        echo "✅ Nginx reloaded with config for ${BOT_NAME}.${DEPLOY_DOMAIN}"
+    else
+        echo "⚠️  Nginx config test failed. Check nginx/conf.d/${BOT_NAME}.conf"
+        echo "   Run: docker exec $NGINX_CONTAINER nginx -t"
+    fi
+else
+    echo "ℹ️  Nginx not running. Start it with: cd ../nginx && docker compose up -d"
+fi
+
 echo ""
 echo "🚀 Bot '$BOT_NAME' is now running!"
-echo "   Container: openclaw-bot-${BOT_NAME}"
-echo "   Port:      $EXTERNAL_PORT → 18789 (internal)"
-echo "   Config:    bots/$BOT_NAME/config.json"
+echo "   Container:  openclaw-bot-${BOT_NAME}"
+echo "   Model:      claudible/${MODEL}"
+echo "   Port:       $EXTERNAL_PORT → 18789 (internal)"
+if [ -n "$DEPLOY_DOMAIN" ]; then
+    echo "   Dashboard:  https://${BOT_NAME}.${DEPLOY_DOMAIN}"
+fi
+echo "   Config:     bots/$BOT_NAME/config.json"
 echo ""
 echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"
+
+# --- Wait for bot to be healthy, then start auto-approve ---
+echo ""
+echo "⏳ Waiting for bot to start (health check)..."
+HEALTH_TIMEOUT=30
+HEALTH_ELAPSED=0
+while [ "$HEALTH_ELAPSED" -lt "$HEALTH_TIMEOUT" ]; do
+    if docker exec "openclaw-bot-${BOT_NAME}" curl -sf http://localhost:18789/health &>/dev/null; then
+        echo "✅ Bot is healthy!"
+        break
+    fi
+    sleep 2
+    HEALTH_ELAPSED=$((HEALTH_ELAPSED + 2))
+done
+
+if [ "$HEALTH_ELAPSED" -ge "$HEALTH_TIMEOUT" ]; then
+    echo "⚠️  Bot not healthy yet. You can pair manually later:"
+    echo "   ./auto-approve.sh $BOT_NAME --wait"
+else
+    echo ""
+    echo "🔗 Open the dashboard in your browser, then device will be auto-approved."
+    echo "   Starting auto-approve (60s timeout)..."
+    echo ""
+    "$SCRIPT_DIR/auto-approve.sh" "$BOT_NAME" --wait || true
+fi

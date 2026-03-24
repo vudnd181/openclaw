@@ -43,13 +43,24 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # --- Stop and remove container ---
+# 1. Try docker compose first (handles service defined in compose file)
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" stop "$SERVICE_NAME" 2>/dev/null || true
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" rm -f "$SERVICE_NAME" 2>/dev/null || true
+
+# 2. Fallback: force-remove container directly by name (catches orphans / stuck containers)
+if docker ps -a --format '{{.Names}}' | grep -q "^${SERVICE_NAME}$"; then
+    docker stop "$SERVICE_NAME" 2>/dev/null || true
+    docker rm -f "$SERVICE_NAME" 2>/dev/null || true
+    echo "✅ Force-removed lingering container: $SERVICE_NAME"
+fi
 echo "✅ Stopped and removed container"
 
 # --- Remove volume ---
 if [ "$KEEP_DATA" != "--keep-data" ]; then
-    docker volume rm "openclaw_docker_${SERVICE_NAME}" 2>/dev/null || \
+    # Try all possible volume name formats (depends on compose project name)
+    COMPOSE_PROJECT=$(basename "$SCRIPT_DIR" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
+    docker volume rm "${COMPOSE_PROJECT}_${SERVICE_NAME}" 2>/dev/null || true
+    docker volume rm "openclaw_docker_${SERVICE_NAME}" 2>/dev/null || true
     docker volume rm "${SERVICE_NAME}" 2>/dev/null || true
     echo "✅ Removed Docker volume"
 fi
@@ -73,6 +84,24 @@ echo "✅ Removed from .env"
 
 # --- Regenerate docker-compose.yml ---
 "$SCRIPT_DIR/generate-compose.sh"
+
+# --- Reload nginx (stale config already removed by generate-compose.sh) ---
+NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
+if [ -f "$NGINX_ENV" ]; then
+    DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
+fi
+DEPLOY_DOMAIN="${DEPLOY_DOMAIN:-}"
+
+NGINX_CONTAINER="bot-nginx"
+if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
+    if docker exec "$NGINX_CONTAINER" nginx -t 2>/dev/null; then
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+        echo "✅ Nginx reloaded (removed ${BOT_NAME}.${DEPLOY_DOMAIN})"
+    else
+        echo "⚠️  Nginx config test failed after removal. Check manually:"
+        echo "   docker exec $NGINX_CONTAINER nginx -t"
+    fi
+fi
 
 echo ""
 echo "🗑️  Bot '$BOT_NAME' has been removed."

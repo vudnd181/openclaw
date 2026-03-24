@@ -73,14 +73,18 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot (single command — 3 args)
+### Deploy a new bot (single command — 3-4 args)
 ```bash
-./deploy-bot.sh <name> <telegram_token> <chat_ids>
-# Example (single user):
+./deploy-bot.sh <name> <telegram_token> <chat_ids> [model]
+# Example (single user, default model claude-haiku-4.5):
 ./deploy-bot.sh alice 987654:XYZ 658635669
 # Example (multiple users, comma-separated):
 ./deploy-bot.sh alice 987654:XYZ 658635669,123456789
+# Example (choose model):
+./deploy-bot.sh alice 987654:XYZ 658635669 claude-sonnet-4.6
 ```
+Available models: `claude-haiku-4.5` (default), `claude-sonnet-4.6`, `claude-opus-4.6`.
+
 The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. Chat IDs are comma-separated Telegram user IDs that are allowed to interact with the bot. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
 
 ### Remove a bot

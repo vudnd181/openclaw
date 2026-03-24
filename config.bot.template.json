@@ -46,7 +46,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "claudible/claude-sonnet-4.6"
+        "primary": "claudible/SELECTED_MODEL"
       },
       "maxConcurrent": 4,
       "subagents": {

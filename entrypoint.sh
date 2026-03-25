@@ -19,6 +19,17 @@ sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegra
 # Configure web section
 sudo -u node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
 
-# Drop to node user and start OpenClaw gateway in foreground
-# --bind lan binds to 0.0.0.0 so Docker port mapping works
-exec sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789
+# ---------- GUI SETUP ----------
+
+# Create log directory for supervisor
+mkdir -p /var/log/supervisor
+
+# Generate VNC password file from environment variable
+/usr/local/bin/setup-vnc-passwd.sh
+
+# Set Chromium env vars so openclaw (or any child process) can launch it
+export DISPLAY="${DISPLAY:-:99}"
+export CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer"
+
+# Launch everything via supervisor (Xvfb, x11vnc, websockify, openclaw)
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

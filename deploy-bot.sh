@@ -122,6 +122,17 @@ sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|SELECTED_MODEL|${MODEL}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 
+# --- Inject bot's domain into allowedOrigins ---
+NGINX_ENV_FILE="$SCRIPT_DIR/../nginx/.env"
+if [ -f "$NGINX_ENV_FILE" ]; then
+    BOT_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV_FILE" | cut -d'=' -f2-)
+fi
+if [ -n "${BOT_DOMAIN:-}" ]; then
+    # Add the bot's HTTPS origin to allowedOrigins in the config
+    sed -i "s|\"allowedOrigins\": \[\"http://localhost:18789\"\]|\"allowedOrigins\": [\"http://localhost:18789\", \"https://${BOT_NAME}.${BOT_DOMAIN}\"]|" \
+        "$BOTS_DIR/$BOT_NAME/config.json"
+fi
+
 echo "✅ Generated bots/$BOT_NAME/config.json (model: $MODEL)"
 
 # --- Register port ---

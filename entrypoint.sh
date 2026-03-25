@@ -24,9 +24,6 @@ sudo -u node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
 # Create log directory for supervisor
 mkdir -p /var/log/supervisor
 
-# Generate VNC password file from environment variable
-/usr/local/bin/setup-vnc-passwd.sh
-
 # Set Chromium env vars so openclaw (or any child process) can launch it
 export DISPLAY="${DISPLAY:-:99}"
 export CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer"

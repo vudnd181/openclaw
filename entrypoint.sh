@@ -11,6 +11,29 @@ if [ -n "${BOT_ORIGIN:-}" ]; then
     /home/node/.openclaw/openclaw.json
 fi
 
+# Remove stale plugin entries that are no longer installed (e.g. browser)
+python3 - <<'EOF'
+import json, sys
+
+config_path = "/home/node/.openclaw/openclaw.json"
+known_plugins = {"telegram", "acpx"}
+
+try:
+    with open(config_path) as f:
+        cfg = json.load(f)
+
+    entries = cfg.get("plugins", {}).get("entries", {})
+    stale = [k for k in entries if k not in known_plugins]
+    for k in stale:
+        del entries[k]
+        print(f"Removed stale plugin entry: {k}", flush=True)
+
+    with open(config_path, "w") as f:
+        json.dump(cfg, f, indent=2)
+except Exception as e:
+    print(f"Plugin cleanup skipped: {e}", flush=True)
+EOF
+
 # Fix ownership of everything in the data dir
 chown -R node:node /home/node/.openclaw 2>/dev/null || true
 

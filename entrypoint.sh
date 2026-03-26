@@ -5,23 +5,31 @@ if [ -f /config/config.json ]; then
   cp /config/config.json /home/node/.openclaw/openclaw.json
 fi
 
-# Inject bot's HTTPS origin into allowedOrigins so the dashboard works from the bot's domain
-if [ -n "${BOT_ORIGIN:-}" ]; then
-  sed -i "s|\"allowedOrigins\": \[\"http://localhost:18789\"\]|\"allowedOrigins\": [\"http://localhost:18789\", \"${BOT_ORIGIN}\"]|" \
-    /home/node/.openclaw/openclaw.json
-fi
-
-# Remove stale plugin entries that are no longer installed (e.g. browser)
-python3 - <<'EOF'
-import json, sys
+# Patch config via Python — robust JSON manipulation (no fragile sed)
+# 1. Inject BOT_ORIGIN into allowedOrigins
+# 2. Remove stale plugin entries
+BOT_ORIGIN="${BOT_ORIGIN:-}" python3 - <<'EOF'
+import json, os
 
 config_path = "/home/node/.openclaw/openclaw.json"
 known_plugins = {"telegram", "acpx"}
+bot_origin = os.environ.get("BOT_ORIGIN", "")
 
 try:
     with open(config_path) as f:
         cfg = json.load(f)
 
+    # Fix allowedOrigins
+    if bot_origin:
+        origins = (cfg
+            .setdefault("gateway", {})
+            .setdefault("controlUi", {})
+            .setdefault("allowedOrigins", ["http://localhost:18789"]))
+        if bot_origin not in origins:
+            origins.append(bot_origin)
+            print(f"Added to allowedOrigins: {bot_origin}", flush=True)
+
+    # Remove stale plugin entries
     entries = cfg.get("plugins", {}).get("entries", {})
     stale = [k for k in entries if k not in known_plugins]
     for k in stale:
@@ -31,7 +39,7 @@ try:
     with open(config_path, "w") as f:
         json.dump(cfg, f, indent=2)
 except Exception as e:
-    print(f"Plugin cleanup skipped: {e}", flush=True)
+    print(f"Config patch skipped: {e}", flush=True)
 EOF
 
 # Fix ownership of everything in the data dir

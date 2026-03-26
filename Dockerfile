@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     npm install --omit=dev --no-save --package-lock=false acpx@0.3.1 && \
     echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# GUI stack: Xvfb + Chromium + VNC + noVNC + supervisor
+# GUI stack: Xvfb + Chromium + VNC + noVNC + supervisor + window manager
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     chromium \
@@ -27,6 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxtst6 \
     libxss1 \
     supervisor \
+    openbox \
+    x11-xserver-utils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/node/.openclaw/workspace && chown -R node:node /home/node/.openclaw

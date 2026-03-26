@@ -45,6 +45,10 @@ chown node:node /home/node/.openclaw/workspace 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
 
+# Configure browser/CDP tool to use Docker-compatible Chromium wrapper
+sudo -u node /usr/local/bin/openclaw config set tools.browser.chromiumPath /usr/local/bin/chromium-docker 2>/dev/null || true
+sudo -u node /usr/local/bin/openclaw config set tools.browser.headless false 2>/dev/null || true
+
 # Enable acpx plugin
 sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
 

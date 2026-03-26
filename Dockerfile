@@ -31,6 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p /home/node/.openclaw/workspace && chown -R node:node /home/node/.openclaw
 
+# Chromium wrapper — always injects Docker-required flags so CDP works in containers
+RUN printf '#!/bin/sh\nexec /usr/bin/chromium \\\n  --no-sandbox \\\n  --disable-gpu \\\n  --disable-dev-shm-usage \\\n  --disable-software-rasterizer \\\n  --disable-background-networking \\\n  "$@"\n' \
+    > /usr/local/bin/chromium-docker && \
+    chmod +x /usr/local/bin/chromium-docker
+
 # Supervisor config (manages Xvfb, x11vnc, websockify, openclaw)
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

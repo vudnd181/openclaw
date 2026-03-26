@@ -86,8 +86,6 @@ while IFS=' ' read -r bot_name port_offset; do
       - ${SERVICE_NAME}:/home/node/.openclaw
       - ./bots/${bot_name}/config.json:/config/config.json:ro
     shm_size: '256m'
-    mem_limit: 3g
-    memswap_limit: 11g
     security_opt:
       - seccomp:unconfined
     restart: unless-stopped

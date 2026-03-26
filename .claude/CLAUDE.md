@@ -147,7 +147,7 @@ Three layers of protection when adding a new bot:
 ## Check
 - Get Gateway token:
   ```bash
-  docker exec -u node openclaw-bot-duc cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+  docker exec -u node openclaw-bot-chinh cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
   ```
 - Approve device (browser dashboard):
   ```bash

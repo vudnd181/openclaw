@@ -19,6 +19,11 @@ sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegra
 # Enable acpx plugin
 sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
 
+# Inject bot's HTTPS origin into allowedOrigins (so dashboard works from the bot's domain)
+if [ -n "${BOT_ORIGIN:-}" ]; then
+  sudo -u node /usr/local/bin/openclaw config set "gateway.controlUi.allowedOrigins[1]" "$BOT_ORIGIN" 2>/dev/null || true
+fi
+
 # Configure web section
 sudo -u node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
 

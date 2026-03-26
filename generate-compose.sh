@@ -79,6 +79,7 @@ while IFS=' ' read -r bot_name port_offset; do
       - NODE_OPTIONS=--max-old-space-size=2560
       - VNC_PASSWORD=\${VNC_PASSWORD:-changeme}
       - DISPLAY=:99
+      - BOT_ORIGIN=https://${bot_name}.${DOMAIN}
     ports:
       - "${EXTERNAL_PORT}:18789"
       - "$((EXTERNAL_PORT + 138)):18927"

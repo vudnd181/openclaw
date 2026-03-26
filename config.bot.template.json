@@ -85,7 +85,6 @@
     "bind": "lan",
     "trustedProxies": ["172.16.0.0/12", "10.0.0.0/8", "192.168.0.0/16"],
     "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true,
       "allowedOrigins": ["http://localhost:18789"]
     },
     "auth": {

@@ -56,6 +56,13 @@ while IFS=' ' read -r bot_name port_offset; do
         echo "  ⏭️  $bot_name: allowedOrigins already has $BOT_ORIGIN"
     fi
 
+    # 3. Remove dangerouslyAllowHostHeaderOriginFallback if present
+    if grep -q '"dangerouslyAllowHostHeaderOriginFallback"' "$CONFIG"; then
+        sed -i '/"dangerouslyAllowHostHeaderOriginFallback"/d' "$CONFIG"
+        CHANGED=true
+        echo "  ✅ $bot_name: removed dangerouslyAllowHostHeaderOriginFallback"
+    fi
+
     if [ "$CHANGED" = true ]; then
         PATCHED=$((PATCHED + 1))
     fi

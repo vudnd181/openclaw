@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     npm install -g openclaw@latest && \
     npm install -g --os=linux --cpu=x64 sharp && \
     openclaw plugins install acpx && \
+    cd /usr/local/lib/node_modules/openclaw/dist/extensions/acpx && \
+    npm install --omit=dev --no-save --package-lock=false acpx@0.3.1 && \
     echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # GUI stack: Xvfb + Chromium + VNC + noVNC + supervisor

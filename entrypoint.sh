@@ -16,6 +16,9 @@ chown node:node /home/node/.openclaw/workspace 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
 
+# Enable acpx plugin
+sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
+
 # Configure web section
 sudo -u node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
 

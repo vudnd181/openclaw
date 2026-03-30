@@ -4,7 +4,7 @@
 #   docker compose -f docker-compose.api.yml logs -f
 #   docker compose -f docker-compose.api.yml down
 #
-# Exposed via nginx reverse proxy at api.<DOMAIN> (HTTPS)
+# Exposed via nginx reverse proxy at api.dashboard.example.com (HTTPS)
 # To also expose directly, uncomment the ports section below.
 
 services:

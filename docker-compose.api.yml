@@ -10,8 +10,8 @@
 services:
   openclaw-api:
     build:
-      context: .
-      dockerfile: api/Dockerfile
+      context: ./api
+      dockerfile: Dockerfile
     container_name: openclaw-api
     environment:
       - API_KEY=${OPENCLAW_API_KEY}

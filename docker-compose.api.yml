@@ -1,0 +1,42 @@
+# Management API — runs separately from bot compose
+# Usage:
+#   docker compose -f docker-compose.api.yml up -d --build
+#   docker compose -f docker-compose.api.yml logs -f
+#   docker compose -f docker-compose.api.yml down
+#
+# Exposed via nginx reverse proxy at api.dashboard.example.com (HTTPS)
+# To also expose directly, uncomment the ports section below.
+
+services:
+  openclaw-api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: openclaw-api
+    environment:
+      - API_KEY=${OPENCLAW_API_KEY}
+      - NODE_ENV=production
+      - LOG_LEVEL=${API_LOG_LEVEL:-info}
+      - WORKSPACE=/workspace
+    # Uncomment to expose port directly (bypasses nginx):
+    # ports:
+    #   - "18800:18800"
+    volumes:
+      # Docker socket — required for docker compose/inspect commands
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount the entire project root so shell scripts can execute
+      - .:/workspace:rw
+    working_dir: /workspace
+    restart: unless-stopped
+    networks:
+      - bot-proxy-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:18800/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  bot-proxy-net:
+    external: true

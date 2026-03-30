@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y \
     openclaw plugins install acpx && \
     cd /usr/local/lib/node_modules/openclaw/dist/extensions/acpx && \
     npm install --omit=dev --no-save --package-lock=false acpx@0.3.1 && \
-    echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    chown -R node:node /usr/local/lib/node_modules /usr/local/bin
 
 # GUI stack: Xvfb + Chromium + VNC + noVNC + supervisor + window manager
 RUN apt-get update && apt-get install -y --no-install-recommends \

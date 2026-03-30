@@ -2,18 +2,29 @@
 set -euo pipefail
 
 # remove-bot.sh — Remove an OpenClaw bot instance
-# Usage: ./remove-bot.sh <bot_name> [--keep-data]
+# Usage: ./remove-bot.sh <bot_name> [--keep-data] [--force]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOTS_DIR="$SCRIPT_DIR/bots"
 PORT_REGISTRY="$BOTS_DIR/.port-registry"
 
-BOT_NAME="${1:-}"
-KEEP_DATA="${2:-}"
+BOT_NAME=""
+KEEP_DATA=""
+FORCE=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --keep-data) KEEP_DATA="--keep-data" ;;
+        --force)     FORCE="--force" ;;
+        -*)          echo "Unknown option: $arg"; exit 1 ;;
+        *)           BOT_NAME="$arg" ;;
+    esac
+done
 
 if [ -z "$BOT_NAME" ]; then
-    echo "Usage: ./remove-bot.sh <bot_name> [--keep-data]"
+    echo "Usage: ./remove-bot.sh <bot_name> [--keep-data] [--force]"
     echo "  --keep-data  Keep the Docker volume (conversation history)"
+    echo "  --force      Skip confirmation prompt (for API/automation use)"
     exit 1
 fi
 
@@ -26,20 +37,22 @@ if [ ! -d "$BOTS_DIR/$BOT_NAME" ] && ! grep -q "^${BOT_NAME} " "$PORT_REGISTRY" 
     exit 1
 fi
 
-# --- Confirm ---
-echo "⚠️  This will remove bot '$BOT_NAME':"
-echo "   - Stop and remove container: $SERVICE_NAME"
-if [ "$KEEP_DATA" != "--keep-data" ]; then
-    echo "   - Delete Docker volume: $SERVICE_NAME (conversation history)"
-fi
-echo "   - Delete bots/$BOT_NAME/ directory"
-echo "   - Remove from .env and port registry"
-echo ""
-read -p "Continue? [y/N] " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
+# --- Confirm (skip with --force for API/automation use) ---
+if [ "$FORCE" != "--force" ]; then
+    echo "⚠️  This will remove bot '$BOT_NAME':"
+    echo "   - Stop and remove container: $SERVICE_NAME"
+    if [ "$KEEP_DATA" != "--keep-data" ]; then
+        echo "   - Delete Docker volume: $SERVICE_NAME (conversation history)"
+    fi
+    echo "   - Delete bots/$BOT_NAME/ directory"
+    echo "   - Remove from .env and port registry"
+    echo ""
+    read -p "Continue? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 0
+    fi
 fi
 
 # --- Stop and remove container ---

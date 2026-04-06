@@ -32,7 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     x11-xserver-utils \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /home/node/.openclaw/workspace && chown -R node:node /home/node/.openclaw
+# Stage the default .openclaw skeleton so entrypoint can seed a fresh volume
+RUN mkdir -p /home/node/.openclaw-skel/workspace && chown -R node:node /home/node/.openclaw-skel
 
 # Chromium wrapper — always injects Docker-required flags so CDP works in containers
 RUN printf '#!/bin/sh\nexec /usr/bin/chromium \\\n  --no-sandbox \\\n  --disable-gpu \\\n  --disable-dev-shm-usage \\\n  --disable-software-rasterizer \\\n  --disable-background-networking \\\n  "$@"\n' \

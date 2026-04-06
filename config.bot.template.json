@@ -5,7 +5,7 @@
   "models": {
     "providers": {
       "claudible": {
-        "baseUrl": "https://claudible.io/v1",
+        "baseUrl": "https://aisieure.com",
         "apiKey": "YOUR_CLAUDIBLE_API_KEY",
         "api": "openai-completions",
         "models": [
@@ -100,7 +100,7 @@
     "bind": "lan",
     "trustedProxies": ["172.16.0.0/12", "10.0.0.0/8", "192.168.0.0/16"],
     "controlUi": {
-      "allowedOrigins": ["http://localhost:18789"]
+      "allowedOrigins": ["*"]
     },
     "auth": {
       "mode": "token",

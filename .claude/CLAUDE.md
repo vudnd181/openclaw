@@ -129,41 +129,6 @@ docker compose up -d --no-deps openclaw-bot-<name>
 docker compose down
 ```
 
-## Data Persistence
-
-Each bot's runtime data (conversations, cache, skills, device tokens, etc.) is stored in a **named Docker volume** mounted at `/home/node/.openclaw`. This data survives:
-
-- **Container restarts** (`docker compose restart`)
-- **Image rebuilds** (`docker compose up -d --build`)
-- **Container recreation** (`docker compose up -d` after config changes)
-
-### What persists (in the volume)
-- `openclaw.json` — synced from `bots/<name>/config.json` on every start
-- Conversation history, message cache
-- Skills and custom configurations
-- Device tokens (gateway pairing)
-- Workspace files
-
-### What does NOT persist (in the image layer)
-- System packages, Node.js, openclaw binary — reinstalled on rebuild
-- The `entrypoint.sh` uses a `.initialized` marker to seed the volume only on first run
-- Plugins are checked and re-installed into the volume if missing after a rebuild
-
-### Volume lifecycle
-- **Created** automatically on first `docker compose up` for a bot
-- **Kept** by default when removing a bot with `remove-bot.sh --keep-data`
-- **Deleted** when removing a bot without `--keep-data` flag
-- **Never** affected by image rebuilds or `generate-compose.sh`
-
-### Manual volume inspection
-```bash
-# List all bot volumes
-docker volume ls | grep openclaw-bot
-
-# Inspect volume contents
-docker run --rm -v openclaw-bot-<name>:/data alpine ls -la /data
-```
-
 ## Safety: "Won't Touch Running Bots"
 
 Three layers of protection when adding a new bot:
@@ -244,7 +209,7 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
 
 ## Check
 - Get Gateway token:
-  ```bash
+  ```bash'
   docker exec -u node openclaw-bot-vu cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
   ```
 - Approve device (browser dashboard):
@@ -253,3 +218,6 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
   docker exec -u node openclaw-bot-vu2 /usr/local/bin/openclaw devices approve <REQUEST_ID>
   ```
 - Telegram DM policy is `"allowlist"` — only specified chat IDs can message the bot.
+
+
+docker exec -u node openclaw-bot-chinh cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3

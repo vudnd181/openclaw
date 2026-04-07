@@ -115,10 +115,8 @@
     "elevated": {
       "enabled": true
     },
-    "security": "allow",
     "exec": {
-      "policy": "allow",
-      "ask": "never"
+      "ask": "off"
     }
   },
   "plugins": {

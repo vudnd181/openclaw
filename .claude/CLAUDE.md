@@ -17,8 +17,7 @@ openclaw_docker/
 ├── docker-compose.yml          # AUTO-GENERATED — never edit manually
 ├── docker-compose.api.yml      # Management API compose (separate from bots)
 ├── generate-compose.sh         # Generates docker-compose.yml from bots/
-├── deploy-bot.sh               # Deploy bot with token + chat IDs as args
-├── deploy-bot-simple.sh        # Deploy bot with name only (configure via UI later)
+├── deploy-bot.sh               # Single-command bot deployment (bot name only, interactive)
 ├── remove-bot.sh               # Clean bot removal
 ├── list-bots.sh                # Show all bots and their status
 ├── .env                        # Shared API key + per-bot Telegram tokens (gitignored)
@@ -220,6 +219,6 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
 - Telegram DM policy is `"allowlist"` — only specified chat IDs can message the bot.
 
 
-docker exec -u node openclaw-bot-chinh cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+docker exec -u node openclaw-bot-cuong cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
 
 

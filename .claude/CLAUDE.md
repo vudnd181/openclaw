@@ -78,16 +78,14 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot (interactive — just the name)
+### Deploy a new bot
 ```bash
-./deploy-bot.sh <name>
-# Example:
+./deploy-bot.sh <name> [model]
+# Examples:
 ./deploy-bot.sh alice
+./deploy-bot.sh alice claude-opus-4.6
 ```
-The script prompts for:
-1. **Telegram token** (required — get from @BotFather)
-2. **Chat IDs** (optional — comma-separated user/group IDs; press Enter to skip and add later)
-3. **Model** (optional — pick 1/2/3; defaults to `claude-sonnet-4.6`)
+No prompts. The bot is created immediately with no Telegram token or channels — configure everything later via the web UI dashboard. Default model is `claude-sonnet-4.6`.
 
 Available models: `claude-haiku-4.5`, `claude-sonnet-4.6` (default), `claude-opus-4.6`.
 

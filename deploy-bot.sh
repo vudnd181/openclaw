@@ -2,9 +2,11 @@
 set -euo pipefail
 
 # deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name>
-# Prompts interactively for Telegram token, allowed chat IDs (optional), and model (optional).
+# Usage: ./deploy-bot.sh <bot_name> [model]
+# Example: ./deploy-bot.sh alice
+# Example: ./deploy-bot.sh alice claude-opus-4.6
 #
+# Telegram token and chat IDs can be configured later via the web UI.
 # The Claudible API key is read from CLAUDIBLE_API_KEY in .env (shared by all bots).
 # Available models: claude-haiku-4.5, claude-sonnet-4.6 (default), claude-opus-4.6
 
@@ -17,13 +19,23 @@ BASE_PORT=18789
 VALID_MODELS=("claude-haiku-4.5" "claude-sonnet-4.6" "claude-opus-4.6")
 DEFAULT_MODEL="claude-sonnet-4.6"
 
-# --- Bot name (required, from arg) ---
+# --- Argument Parsing ---
 BOT_NAME="${1:-}"
+MODEL="${2:-$DEFAULT_MODEL}"
+TELEGRAM_TOKEN=""
+CHAT_IDS=""
 
 if [ -z "$BOT_NAME" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name>"
+    echo "Usage: ./deploy-bot.sh <bot_name> [model]"
     echo ""
-    echo "Example: ./deploy-bot.sh alice"
+    echo "Examples:"
+    echo "  ./deploy-bot.sh alice"
+    echo "  ./deploy-bot.sh alice claude-opus-4.6"
+    echo ""
+    echo "Available models: ${VALID_MODELS[*]}"
+    echo "Default model: $DEFAULT_MODEL"
+    echo ""
+    echo "Telegram token and channels can be configured later via the web UI."
     exit 1
 fi
 
@@ -33,39 +45,16 @@ if [[ ! "$BOT_NAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
     exit 1
 fi
 
-# --- Prompt for Telegram token ---
-read -rp "Telegram bot token (from @BotFather): " TELEGRAM_TOKEN
-TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}"
-if [ -z "$TELEGRAM_TOKEN" ]; then
-    echo "❌ Telegram token is required"
+# --- Validate model ---
+MODEL_VALID=false
+for m in "${VALID_MODELS[@]}"; do
+    if [ "$MODEL" = "$m" ]; then MODEL_VALID=true; break; fi
+done
+if [ "$MODEL_VALID" = false ]; then
+    echo "❌ Invalid model: $MODEL"
+    echo "   Available models: ${VALID_MODELS[*]}"
     exit 1
 fi
-
-# --- Prompt for chat IDs (optional) ---
-echo "Allowed chat IDs — comma-separated Telegram user/group IDs (press Enter to skip, add later)"
-read -rp "Chat IDs [optional]: " CHAT_IDS
-CHAT_IDS="${CHAT_IDS:-}"
-
-# --- Prompt for model (optional) ---
-echo "Model to use:"
-echo "  1) claude-sonnet-4.6  (default — balanced)"
-echo "  2) claude-haiku-4.5   (fast & cheap)"
-echo "  3) claude-opus-4.6    (most capable)"
-read -rp "Choose model [1]: " MODEL_CHOICE
-case "${MODEL_CHOICE:-1}" in
-    1|"") MODEL="claude-sonnet-4.6" ;;
-    2)    MODEL="claude-haiku-4.5" ;;
-    3)    MODEL="claude-opus-4.6" ;;
-    *)
-        # Allow typing the model name directly
-        if [[ " ${VALID_MODELS[*]} " == *" ${MODEL_CHOICE} "* ]]; then
-            MODEL="$MODEL_CHOICE"
-        else
-            echo "❌ Invalid choice. Using default: $DEFAULT_MODEL"
-            MODEL="$DEFAULT_MODEL"
-        fi
-        ;;
-esac
 
 # --- Check template exists ---
 if [ ! -f "$TEMPLATE" ]; then

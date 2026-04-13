@@ -17,7 +17,7 @@ openclaw_docker/
 ├── docker-compose.yml          # AUTO-GENERATED — never edit manually
 ├── docker-compose.api.yml      # Management API compose (separate from bots)
 ├── generate-compose.sh         # Generates docker-compose.yml from bots/
-├── deploy-bot.sh               # Single-command bot deployment (3 args)
+├── deploy-bot.sh               # Single-command bot deployment (bot name only, interactive)
 ├── remove-bot.sh               # Clean bot removal
 ├── list-bots.sh                # Show all bots and their status
 ├── .env                        # Shared API key + per-bot Telegram tokens (gitignored)
@@ -78,19 +78,20 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot (single command — 3-4 args)
+### Deploy a new bot (interactive — just the name)
 ```bash
-./deploy-bot.sh <name> <telegram_token> <chat_ids> [model]
-# Example (single user, default model claude-haiku-4.5):
-./deploy-bot.sh alice 987654:XYZ 658635669
-# Example (multiple users, comma-separated):
-./deploy-bot.sh alice 987654:XYZ 658635669,123456789
-# Example (choose model):
-./deploy-bot.sh alice 987654:XYZ 658635669 claude-sonnet-4.6
+./deploy-bot.sh <name>
+# Example:
+./deploy-bot.sh alice
 ```
-Available models: `claude-haiku-4.5` (default), `claude-sonnet-4.6`, `claude-opus-4.6`.
+The script prompts for:
+1. **Telegram token** (required — get from @BotFather)
+2. **Chat IDs** (optional — comma-separated user/group IDs; press Enter to skip and add later)
+3. **Model** (optional — pick 1/2/3; defaults to `claude-sonnet-4.6`)
 
-The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. Chat IDs are comma-separated Telegram user IDs that are allowed to interact with the bot. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
+Available models: `claude-haiku-4.5`, `claude-sonnet-4.6` (default), `claude-opus-4.6`.
+
+The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
 
 ### Remove a bot
 ```bash
@@ -188,9 +189,9 @@ Auth: `X-API-Key: $OPENCLAW_API_KEY` header or `Authorization: Bearer $OPENCLAW_
 # List bots (via nginx)
 curl -s -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/api/v1/bots | jq
 
-# Deploy a bot
+# Deploy a bot (chatIds optional — omit to configure channels later)
 curl -s -X POST -H "X-API-Key: $OPENCLAW_API_KEY" -H "Content-Type: application/json" \
-  -d '{"name":"alice","telegramToken":"123456:ABC","chatIds":["658635669"]}' \
+  -d '{"name":"alice","telegramToken":"123456:ABC"}' \
   https://api.yourdomain.com/api/v1/bots | jq
 
 # Remove a bot
@@ -210,7 +211,7 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
 ## Check
 - Get Gateway token:
   ```bash'
-  docker exec -u node openclaw-bot-vu cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+  docker exec -u node openclaw-bot-vudnd cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
   ```
 - Approve device (browser dashboard):
   ```bash
@@ -221,3 +222,5 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
 
 
 docker exec -u node openclaw-bot-chinh cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+
+

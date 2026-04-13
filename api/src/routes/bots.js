@@ -51,7 +51,7 @@ router.post('/', async (req, res, next) => {
     const result = await botService.deployBot({
       name: req.body.name,
       telegramToken: req.body.telegramToken.trim(),
-      chatIds: req.body.chatIds,
+      chatIds: req.body.chatIds || [],
       model: req.body.model || undefined,
     });
 

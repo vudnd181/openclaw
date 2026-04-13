@@ -164,7 +164,7 @@ async function deployBot({ name, telegramToken, chatIds, model }) {
     const args = [name, telegramToken, chatIds.join(',')];
     if (model) args.push(model);
 
-    logger.info({ message: `Deploying bot '${name}'`, model: model || 'claude-haiku-4.5' });
+    logger.info({ message: `Deploying bot '${name}'`, model: model || 'claude-sonnet-4.6' });
 
     try {
       const result = await runScript(config.DEPLOY_SCRIPT, args, {
@@ -183,7 +183,7 @@ async function deployBot({ name, telegramToken, chatIds, model }) {
         port: newEntry ? externalPort(newEntry.offset) : null,
         status,
         container: containerName(name),
-        model: model || 'claude-haiku-4.5',
+        model: model || 'claude-sonnet-4.6',
         message: 'Bot deployed successfully',
       };
     } catch (err) {

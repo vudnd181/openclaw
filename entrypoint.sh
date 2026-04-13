@@ -96,6 +96,7 @@ fi
 # ---------- 5. Apply openclaw config settings ----------
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
+sudo -u node /usr/local/bin/openclaw config set tools.exec.ask off 2>/dev/null || true
 
 # Configure browser/CDP tool to use Docker-compatible Chromium wrapper
 sudo -u node /usr/local/bin/openclaw config set tools.browser.chromiumPath /usr/local/bin/chromium-docker 2>/dev/null || true

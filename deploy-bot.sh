@@ -2,12 +2,11 @@
 set -euo pipefail
 
 # deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids> [model]
-# Example: ./deploy-bot.sh alice 123456:ABC 658635669,123456789
-# Example: ./deploy-bot.sh alice 123456:ABC 658635669 claude-sonnet-4.6
+# Usage: ./deploy-bot.sh <bot_name>
+# Prompts interactively for Telegram token, allowed chat IDs (optional), and model (optional).
 #
 # The Claudible API key is read from CLAUDIBLE_API_KEY in .env (shared by all bots).
-# Available models: claude-haiku-4.5 (default), claude-sonnet-4.6, claude-opus-4.6
+# Available models: claude-haiku-4.5, claude-sonnet-4.6 (default), claude-opus-4.6
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOTS_DIR="$SCRIPT_DIR/bots"
@@ -15,55 +14,58 @@ PORT_REGISTRY="$BOTS_DIR/.port-registry"
 TEMPLATE="$SCRIPT_DIR/config.bot.template.json"
 BASE_PORT=18789
 
-# --- Argument Parsing ---
-BOT_NAME="${1:-}"
-TELEGRAM_TOKEN="${2:-}"
-CHAT_IDS="${3:-}"
-MODEL="${4:-claude-haiku-4.5}"
-
-# Validate model name
 VALID_MODELS=("claude-haiku-4.5" "claude-sonnet-4.6" "claude-opus-4.6")
-MODEL_VALID=false
-for m in "${VALID_MODELS[@]}"; do
-    if [ "$MODEL" = "$m" ]; then
-        MODEL_VALID=true
-        break
-    fi
-done
-if [ "$MODEL_VALID" = false ]; then
-    echo "❌ Invalid model: $MODEL"
-    echo "   Available models: ${VALID_MODELS[*]}"
+DEFAULT_MODEL="claude-sonnet-4.6"
+
+# --- Bot name (required, from arg) ---
+BOT_NAME="${1:-}"
+
+if [ -z "$BOT_NAME" ]; then
+    echo "Usage: ./deploy-bot.sh <bot_name>"
+    echo ""
+    echo "Example: ./deploy-bot.sh alice"
     exit 1
 fi
 
-if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ] || [ -z "$CHAT_IDS" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> <chat_ids> [model]"
-    echo ""
-    echo "Arguments:"
-    echo "  bot_name        Unique name for the bot (e.g., alice, support-bot)"
-    echo "  telegram_token  Telegram bot token from @BotFather"
-    echo "  chat_ids        Comma-separated Telegram user/chat IDs to allow"
-    echo "  model           Model to use (optional, default: claude-haiku-4.5)"
-    echo ""
-    echo "Available models:"
-    echo "  claude-haiku-4.5   (default — fast & cheap)"
-    echo "  claude-sonnet-4.6  (balanced)"
-    echo "  claude-opus-4.6    (most capable)"
-    echo ""
-    echo "The Claudible API key is read from CLAUDIBLE_API_KEY in .env"
-    echo ""
-    echo "Examples:"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669 claude-sonnet-4.6"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669,123456789,987654321"
-    exit 1
-fi
-
-# --- Validate bot name (lowercase alphanumeric + hyphens) ---
+# --- Validate bot name ---
 if [[ ! "$BOT_NAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
     echo "❌ Bot name must be lowercase alphanumeric with optional hyphens (e.g., 'alice', 'support-bot')"
     exit 1
 fi
+
+# --- Prompt for Telegram token ---
+read -rp "Telegram bot token (from @BotFather): " TELEGRAM_TOKEN
+TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}"
+if [ -z "$TELEGRAM_TOKEN" ]; then
+    echo "❌ Telegram token is required"
+    exit 1
+fi
+
+# --- Prompt for chat IDs (optional) ---
+echo "Allowed chat IDs — comma-separated Telegram user/group IDs (press Enter to skip, add later)"
+read -rp "Chat IDs [optional]: " CHAT_IDS
+CHAT_IDS="${CHAT_IDS:-}"
+
+# --- Prompt for model (optional) ---
+echo "Model to use:"
+echo "  1) claude-sonnet-4.6  (default — balanced)"
+echo "  2) claude-haiku-4.5   (fast & cheap)"
+echo "  3) claude-opus-4.6    (most capable)"
+read -rp "Choose model [1]: " MODEL_CHOICE
+case "${MODEL_CHOICE:-1}" in
+    1|"") MODEL="claude-sonnet-4.6" ;;
+    2)    MODEL="claude-haiku-4.5" ;;
+    3)    MODEL="claude-opus-4.6" ;;
+    *)
+        # Allow typing the model name directly
+        if [[ " ${VALID_MODELS[*]} " == *" ${MODEL_CHOICE} "* ]]; then
+            MODEL="$MODEL_CHOICE"
+        else
+            echo "❌ Invalid choice. Using default: $DEFAULT_MODEL"
+            MODEL="$DEFAULT_MODEL"
+        fi
+        ;;
+esac
 
 # --- Check template exists ---
 if [ ! -f "$TEMPLATE" ]; then
@@ -112,13 +114,20 @@ mkdir -p "$BOTS_DIR/$BOT_NAME"
 # --- Generate config.json from template ---
 SECRET_TOKEN=$(openssl rand -hex 32)
 
-# Convert comma-separated IDs to JSON array format: 123,456 → "123","456"
-ALLOW_FROM_JSON=$(echo "$CHAT_IDS" | sed 's/,/","/g')
+# Build allowFrom JSON: empty → [] or ["id1","id2"]
+if [ -z "$CHAT_IDS" ]; then
+    ALLOW_FROM_JSON='[]'
+    ALLOW_FROM_REPLACEMENT='[]'
+else
+    ALLOW_FROM_IDS=$(echo "$CHAT_IDS" | sed 's/,/","/g')
+    ALLOW_FROM_JSON='"'"$ALLOW_FROM_IDS"'"'
+    ALLOW_FROM_REPLACEMENT='["'"$ALLOW_FROM_IDS"'"]'
+fi
 
 sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
-    -e "s|ALLOWED_CHAT_IDS|${ALLOW_FROM_JSON}|g" \
+    -e "s|\[\"ALLOWED_CHAT_IDS\"\]|${ALLOW_FROM_REPLACEMENT}|g" \
     -e "s|SELECTED_MODEL|${MODEL}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 

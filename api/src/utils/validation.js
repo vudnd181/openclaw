@@ -37,20 +37,22 @@ function validateDeployInput(body) {
     });
   }
 
-  // chatIds (required, non-empty array of numeric strings)
-  if (!Array.isArray(body.chatIds) || body.chatIds.length === 0) {
-    errors.push({
-      field: 'chatIds',
-      message: 'chatIds must be a non-empty array of numeric strings',
-    });
-  } else {
-    for (const id of body.chatIds) {
-      if (typeof id !== 'string' || !/^-?\d+$/.test(id)) {
-        errors.push({
-          field: 'chatIds',
-          message: `Invalid chat ID: "${id}" (must be a numeric string, can be negative for groups)`,
-        });
-        break; // report first bad ID only
+  // chatIds (optional — can be set up later)
+  if (body.chatIds !== undefined && body.chatIds !== null) {
+    if (!Array.isArray(body.chatIds)) {
+      errors.push({
+        field: 'chatIds',
+        message: 'chatIds must be an array of numeric strings',
+      });
+    } else {
+      for (const id of body.chatIds) {
+        if (typeof id !== 'string' || !/^-?\d+$/.test(id)) {
+          errors.push({
+            field: 'chatIds',
+            message: `Invalid chat ID: "${id}" (must be a numeric string, can be negative for groups)`,
+          });
+          break; // report first bad ID only
+        }
       }
     }
   }

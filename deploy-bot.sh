@@ -62,15 +62,23 @@ if [ ! -f "$TEMPLATE" ]; then
     exit 1
 fi
 
-# --- Read shared API key from .env ---
+# --- Read shared config from .env ---
 if [ -f "$SCRIPT_DIR/.env" ]; then
     CLAUDIBLE_KEY=$(grep '^CLAUDIBLE_API_KEY=' "$SCRIPT_DIR/.env" | cut -d'=' -f2-)
+    CLAUDIBLE_URL=$(grep '^CLAUDIBLE_BASE_URL=' "$SCRIPT_DIR/.env" | cut -d'=' -f2-)
 fi
 
 if [ -z "${CLAUDIBLE_KEY:-}" ]; then
     echo "❌ CLAUDIBLE_API_KEY not found in .env"
     echo "   Add this line to .env:"
     echo "   CLAUDIBLE_API_KEY=your-api-key-here"
+    exit 1
+fi
+
+if [ -z "${CLAUDIBLE_URL:-}" ]; then
+    echo "❌ CLAUDIBLE_BASE_URL not found in .env"
+    echo "   Add this line to .env:"
+    echo "   CLAUDIBLE_BASE_URL=https://aisieure.com"
     exit 1
 fi
 
@@ -115,6 +123,7 @@ fi
 
 sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
+    -e "s|CLAUDIBLE_BASE_URL|${CLAUDIBLE_URL}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
     -e "s|\[\"ALLOWED_CHAT_IDS\"\]|${ALLOW_FROM_REPLACEMENT}|g" \
     -e "s|SELECTED_MODEL|${MODEL}|g" \

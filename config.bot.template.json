@@ -5,7 +5,7 @@
   "models": {
     "providers": {
       "claudible": {
-        "baseUrl": "https://aisieure.com",
+        "baseUrl": "CLAUDIBLE_BASE_URL",
         "apiKey": "YOUR_CLAUDIBLE_API_KEY",
         "api": "openai-completions",
         "models": [

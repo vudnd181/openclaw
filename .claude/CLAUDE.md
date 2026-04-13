@@ -17,7 +17,8 @@ openclaw_docker/
 ├── docker-compose.yml          # AUTO-GENERATED — never edit manually
 ├── docker-compose.api.yml      # Management API compose (separate from bots)
 ├── generate-compose.sh         # Generates docker-compose.yml from bots/
-├── deploy-bot.sh               # Single-command bot deployment (bot name only, interactive)
+├── deploy-bot.sh               # Deploy bot with token + chat IDs as args
+├── deploy-bot-simple.sh        # Deploy bot with name only (configure via UI later)
 ├── remove-bot.sh               # Clean bot removal
 ├── list-bots.sh                # Show all bots and their status
 ├── .env                        # Shared API key + per-bot Telegram tokens (gitignored)

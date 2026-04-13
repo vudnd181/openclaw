@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# deploy-bot.sh — Deploy a new OpenClaw bot instance
-# Usage: ./deploy-bot.sh <bot_name> <telegram_token> [chat_ids] [model]
-# Example: ./deploy-bot.sh alice 123456:ABC
-# Example: ./deploy-bot.sh alice 123456:ABC 658635669,123456789
-# Example: ./deploy-bot.sh alice 123456:ABC 658635669 claude-opus-4.6
+# deploy-bot-simple.sh — Deploy a new OpenClaw bot with no token required
+# Usage: ./deploy-bot-simple.sh <bot_name> [model]
+# Example: ./deploy-bot-simple.sh alice
+# Example: ./deploy-bot-simple.sh alice claude-opus-4.6
 #
+# Telegram token and chat IDs can be configured later via the web UI.
 # The Claudible API key and base URL are read from .env (shared by all bots).
 # Available models: claude-haiku-4.5, claude-sonnet-4.6 (default), claude-opus-4.6
 
@@ -21,27 +21,22 @@ DEFAULT_MODEL="claude-sonnet-4.6"
 
 # --- Argument Parsing ---
 BOT_NAME="${1:-}"
-TELEGRAM_TOKEN="${2:-}"
-CHAT_IDS="${3:-}"
-MODEL="${4:-$DEFAULT_MODEL}"
+MODEL="${2:-$DEFAULT_MODEL}"
+TELEGRAM_TOKEN=""
+CHAT_IDS=""
 
-if [ -z "$BOT_NAME" ] || [ -z "$TELEGRAM_TOKEN" ]; then
-    echo "Usage: ./deploy-bot.sh <bot_name> <telegram_token> [chat_ids] [model]"
-    echo ""
-    echo "Arguments:"
-    echo "  bot_name        Unique name for the bot (e.g., alice, support-bot)"
-    echo "  telegram_token  Telegram bot token from @BotFather"
-    echo "  chat_ids        Comma-separated Telegram user/chat IDs (optional, add later via UI)"
-    echo "  model           Model to use (optional, default: $DEFAULT_MODEL)"
-    echo ""
-    echo "Available models: ${VALID_MODELS[*]}"
+if [ -z "$BOT_NAME" ]; then
+    echo "Usage: ./deploy-bot-simple.sh <bot_name> [model]"
     echo ""
     echo "Examples:"
-    echo "  ./deploy-bot.sh alice 123456:ABC"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669"
-    echo "  ./deploy-bot.sh alice 123456:ABC 658635669 claude-opus-4.6"
+    echo "  ./deploy-bot-simple.sh alice"
+    echo "  ./deploy-bot-simple.sh alice claude-opus-4.6"
     echo ""
-    echo "Tip: To deploy without a token, use ./deploy-bot-simple.sh <bot_name>"
+    echo "Available models: ${VALID_MODELS[*]}"
+    echo "Default model: $DEFAULT_MODEL"
+    echo ""
+    echo "Telegram token and channels can be configured later via the web UI."
+    echo "To deploy with a token now, use: ./deploy-bot.sh <name> <token> [chat_ids] [model]"
     exit 1
 fi
 
@@ -76,15 +71,13 @@ fi
 
 if [ -z "${CLAUDIBLE_KEY:-}" ]; then
     echo "❌ CLAUDIBLE_API_KEY not found in .env"
-    echo "   Add this line to .env:"
-    echo "   CLAUDIBLE_API_KEY=your-api-key-here"
+    echo "   Add this line to .env: CLAUDIBLE_API_KEY=your-api-key-here"
     exit 1
 fi
 
 if [ -z "${CLAUDIBLE_URL:-}" ]; then
     echo "❌ CLAUDIBLE_BASE_URL not found in .env"
-    echo "   Add this line to .env:"
-    echo "   CLAUDIBLE_BASE_URL=https://aisieure.com"
+    echo "   Add this line to .env: CLAUDIBLE_BASE_URL=https://aisieure.com"
     exit 1
 fi
 
@@ -98,7 +91,6 @@ fi
 mkdir -p "$BOTS_DIR"
 touch "$PORT_REGISTRY"
 
-# Find the next available offset (fill gaps from removed bots)
 USED_OFFSETS=$(awk '{print $2}' "$PORT_REGISTRY" | sort -n)
 NEXT_OFFSET=1
 for offset in $USED_OFFSETS; do
@@ -117,21 +109,11 @@ mkdir -p "$BOTS_DIR/$BOT_NAME"
 # --- Generate config.json from template ---
 SECRET_TOKEN=$(openssl rand -hex 32)
 
-# Build allowFrom JSON: empty → [] or ["id1","id2"]
-if [ -z "$CHAT_IDS" ]; then
-    ALLOW_FROM_JSON='[]'
-    ALLOW_FROM_REPLACEMENT='[]'
-else
-    ALLOW_FROM_IDS=$(echo "$CHAT_IDS" | sed 's/,/","/g')
-    ALLOW_FROM_JSON='"'"$ALLOW_FROM_IDS"'"'
-    ALLOW_FROM_REPLACEMENT='["'"$ALLOW_FROM_IDS"'"]'
-fi
-
 sed -e "s|YOUR_TELEGRAM_BOT_TOKEN|${TELEGRAM_TOKEN}|g" \
     -e "s|YOUR_CLAUDIBLE_API_KEY|${CLAUDIBLE_KEY}|g" \
     -e "s|CLAUDIBLE_BASE_URL|${CLAUDIBLE_URL}|g" \
     -e "s|YOUR_SECRET_TOKEN|${SECRET_TOKEN}|g" \
-    -e "s|\[\"ALLOWED_CHAT_IDS\"\]|${ALLOW_FROM_REPLACEMENT}|g" \
+    -e "s|\[\"ALLOWED_CHAT_IDS\"\]|[]|g" \
     -e "s|SELECTED_MODEL|${MODEL}|g" \
     "$TEMPLATE" > "$BOTS_DIR/$BOT_NAME/config.json"
 
@@ -141,7 +123,6 @@ if [ -f "$NGINX_ENV_FILE" ]; then
     BOT_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV_FILE" | cut -d'=' -f2-)
 fi
 if [ -n "${BOT_DOMAIN:-}" ]; then
-    # Add the bot's HTTPS origin to allowedOrigins in the config
     sed -i "s|\"allowedOrigins\": \[\"http://localhost:18789\"\]|\"allowedOrigins\": [\"http://localhost:18789\", \"https://${BOT_NAME}.${BOT_DOMAIN}\"]|" \
         "$BOTS_DIR/$BOT_NAME/config.json"
 fi
@@ -152,23 +133,23 @@ echo "✅ Generated bots/$BOT_NAME/config.json (model: $MODEL)"
 echo "$BOT_NAME $NEXT_OFFSET" >> "$PORT_REGISTRY"
 echo "✅ Registered port offset $NEXT_OFFSET (external port: $EXTERNAL_PORT)"
 
-# --- Update .env ---
+# --- Update .env (no token to store) ---
 ENV_VAR_SUFFIX=$(echo "$BOT_NAME" | tr '[:lower:]-' '[:upper:]_')
 cat >> "$SCRIPT_DIR/.env" << EOF
 
 # Bot: $BOT_NAME
-TOKEN_${ENV_VAR_SUFFIX}=${TELEGRAM_TOKEN}
+TOKEN_${ENV_VAR_SUFFIX}=
 EOF
-echo "✅ Added TOKEN_${ENV_VAR_SUFFIX} to .env"
+echo "✅ Added TOKEN_${ENV_VAR_SUFFIX} to .env (empty — set via UI later)"
 
 # --- Regenerate docker-compose.yml ---
 "$SCRIPT_DIR/generate-compose.sh"
 
-# --- Build and start ONLY this bot (--no-deps prevents touching other bots) ---
+# --- Build and start ONLY this bot ---
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" build "openclaw-bot-${BOT_NAME}"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --no-deps "openclaw-bot-${BOT_NAME}"
 
-# --- Reload nginx to pick up new bot config ---
+# --- Reload nginx ---
 NGINX_ENV="$SCRIPT_DIR/../nginx/.env"
 if [ -f "$NGINX_ENV" ]; then
     DEPLOY_DOMAIN=$(grep '^DOMAIN=' "$NGINX_ENV" | cut -d'=' -f2-)
@@ -182,7 +163,6 @@ if docker ps --format '{{.Names}}' | grep -q "^${NGINX_CONTAINER}$"; then
         echo "✅ Nginx reloaded with config for ${BOT_NAME}.${DEPLOY_DOMAIN}"
     else
         echo "⚠️  Nginx config test failed. Check nginx/conf.d/${BOT_NAME}.conf"
-        echo "   Run: docker exec $NGINX_CONTAINER nginx -t"
     fi
 else
     echo "ℹ️  Nginx not running. Start it with: cd ../nginx && docker compose up -d"
@@ -198,29 +178,9 @@ if [ -n "$DEPLOY_DOMAIN" ]; then
 fi
 echo "   Config:     bots/$BOT_NAME/config.json"
 echo ""
-echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"
-
-# --- Wait for bot to be healthy, then start auto-approve ---
-echo ""
-echo "⏳ Waiting for bot to start (health check)..."
-HEALTH_TIMEOUT=30
-HEALTH_ELAPSED=0
-while [ "$HEALTH_ELAPSED" -lt "$HEALTH_TIMEOUT" ]; do
-    if docker exec "openclaw-bot-${BOT_NAME}" curl -sf http://localhost:18789/health &>/dev/null; then
-        echo "✅ Bot is healthy!"
-        break
-    fi
-    sleep 2
-    HEALTH_ELAPSED=$((HEALTH_ELAPSED + 2))
-done
-
-if [ "$HEALTH_ELAPSED" -ge "$HEALTH_TIMEOUT" ]; then
-    echo "⚠️  Bot not healthy yet. You can pair manually later:"
-    echo "   ./auto-approve.sh $BOT_NAME --wait"
-else
-    echo ""
-    echo "🔗 Open the dashboard in your browser, then device will be auto-approved."
-    echo "   Starting auto-approve (60s timeout)..."
-    echo ""
-    "$SCRIPT_DIR/auto-approve.sh" "$BOT_NAME" --wait || true
+echo "⚠️  No Telegram token set. Configure it via the dashboard:"
+if [ -n "$DEPLOY_DOMAIN" ]; then
+    echo "   https://${BOT_NAME}.${DEPLOY_DOMAIN}"
 fi
+echo ""
+echo "📋 View logs: docker compose logs -f openclaw-bot-${BOT_NAME}"

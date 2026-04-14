@@ -77,7 +77,7 @@ fi
 if grep -q "\"${CHANNEL_NAME}\":" "$CONFIG"; then
     echo "❌ Channel '$CHANNEL_NAME' already exists in bot '$BOT_NAME'"
     echo "   Existing accounts:"
-    grep -oP '"[^"]+(?="\s*:\s*\{)' "$CONFIG" | grep -v '^\s*$' | sed 's/^/     /' || true
+    grep -oP '"[^"]+(?="\s*:\s*\{)' "$CONFIG" | grep -v '^\s*$' | ~sed 's/^/     /' || true
     exit 1
 fi
 

@@ -78,16 +78,25 @@ The API key is defined **once** and read by `deploy-bot.sh` when creating new bo
 
 ## Common Commands
 
-### Deploy a new bot
+### Deploy a new bot (with token)
 ```bash
-./deploy-bot.sh <name> [model]
+./deploy-bot.sh <name> <telegram_token> [chat_ids] [model]
 # Examples:
-./deploy-bot.sh alice
-./deploy-bot.sh alice claude-opus-4.6
+./deploy-bot.sh alice 123456:ABC
+./deploy-bot.sh alice 123456:ABC 658635669,123456789
+./deploy-bot.sh alice 123456:ABC 658635669 claude-opus-4.6
 ```
-No prompts. The bot is created immediately with no Telegram token or channels — configure everything later via the web UI dashboard. Default model is `claude-sonnet-4.6`.
 
-Available models: `claude-haiku-4.5`, `claude-sonnet-4.6` (default), `claude-opus-4.6`.
+### Deploy a new bot (name only, configure later via UI)
+```bash
+./deploy-bot-simple.sh <name> [model]
+# Examples:
+./deploy-bot-simple.sh alice
+./deploy-bot-simple.sh alice claude-opus-4.6
+```
+No token required. Configure Telegram token and chat IDs later via the web UI dashboard.
+
+Default model for both scripts: `claude-sonnet-4.6`. Available: `claude-haiku-4.5`, `claude-sonnet-4.6`, `claude-opus-4.6`.
 
 The API key is automatically read from `CLAUDIBLE_API_KEY` in `.env`. This creates `bots/alice/config.json`, assigns a port, updates `.env`, regenerates `docker-compose.yml`, builds, and starts **only** the new bot.
 

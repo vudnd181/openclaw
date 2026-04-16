@@ -119,8 +119,8 @@ sync_value(cfg, tpl, "commands.nativeSkills")
 # Message settings
 sync_value(cfg, tpl, "messages.ackReactionScope")
 
-# Gateway mode/bind/tailscale (not secrets)
-sync_value(cfg, tpl, "gateway.mode")
+# Gateway tailscale (not secrets) — NOTE: gateway.mode is intentionally NOT synced
+# because "server" mode disables device pairing. Keep per-bot as-is.
 sync_value(cfg, tpl, "gateway.tailscale.mode")
 sync_value(cfg, tpl, "gateway.tailscale.resetOnExit")
 sync_list (cfg, tpl, "gateway.trustedProxies")

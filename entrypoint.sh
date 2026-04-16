@@ -80,12 +80,23 @@ fi
 # ---------- 6. Auto-approve device pairing requests in background ----------
 (
   while true; do
-    sudo -u node /usr/local/bin/openclaw devices list 2>/dev/null \
-      | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32,}' \
-      | while read -r req_id; do
-          sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>/dev/null && \
-            echo "[entrypoint] auto-approved device: $req_id" || true
-        done
+    # Get full output for debugging
+    DEVICES_OUT=$(sudo -u node /usr/local/bin/openclaw devices list 2>&1 || true)
+
+    if [ -n "$DEVICES_OUT" ]; then
+      echo "[auto-approve] devices list: $DEVICES_OUT"
+
+      # Extract any hex IDs (UUID or long hex)
+      echo "$DEVICES_OUT" \
+        | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32,}' \
+        | sort -u \
+        | while IFS= read -r req_id; do
+            [ -z "$req_id" ] && continue
+            APPROVE_OUT=$(sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>&1 || true)
+            echo "[auto-approve] approve $req_id → $APPROVE_OUT"
+          done
+    fi
+
     sleep 1
   done
 ) &

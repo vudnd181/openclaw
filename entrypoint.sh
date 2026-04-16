@@ -68,19 +68,16 @@ if ! sudo -u node /usr/local/bin/openclaw plugins list 2>/dev/null | grep -q "ac
   sudo -u node /usr/local/bin/openclaw plugins install acpx 2>/dev/null || true
   ACPX_DIR=$(find /usr/local/lib/node_modules/openclaw -path "*/extensions/acpx" -type d 2>/dev/null | head -1)
   if [ -n "$ACPX_DIR" ]; then
-    cd "$ACPX_DIR" && npm install --omit=dev --no-save --package-lock=false acpx@0.3.1 2>/dev/null || true
+    (cd "$ACPX_DIR" && npm install --omit=dev --no-save --package-lock=false acpx@0.3.1 2>/dev/null) || true
   fi
 fi
 
-# ---------- 5. Apply openclaw config settings ----------
-sudo -u node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/dev/null || true
-sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
-sudo -u node /usr/local/bin/openclaw config set tools.exec.ask off 2>/dev/null || true
-sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
+# ---------- 5. Config is managed entirely via /config/config.json (mounted read-only)
+# No openclaw config set commands here — they overwrite the valid config with
+# incorrect types (e.g. allowFrom.telegram:true instead of ["telegram"]) and
+# cause the gateway to exit with code 1 on startup.
 
 # ---------- 6. Auto-approve device pairing requests in background ----------
-# Runs inside the container so any browser with the correct token gets auto-approved
-# without manual CLI intervention. Checks every 3s, approves all pending requests.
 (
   while true; do
     sudo -u node /usr/local/bin/openclaw devices list 2>/dev/null \
@@ -89,7 +86,7 @@ sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled tru
           sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>/dev/null && \
             echo "[entrypoint] auto-approved device: $req_id" || true
         done
-    sleep 3
+    sleep 1
   done
 ) &
 

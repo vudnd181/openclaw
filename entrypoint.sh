@@ -78,5 +78,20 @@ sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegra
 sudo -u node /usr/local/bin/openclaw config set tools.exec.ask off 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
 
-# ---------- 6. Start gateway ----------
+# ---------- 6. Auto-approve device pairing requests in background ----------
+# Runs inside the container so any browser with the correct token gets auto-approved
+# without manual CLI intervention. Checks every 3s, approves all pending requests.
+(
+  while true; do
+    sudo -u node /usr/local/bin/openclaw devices list 2>/dev/null \
+      | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32,}' \
+      | while read -r req_id; do
+          sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>/dev/null && \
+            echo "[entrypoint] auto-approved device: $req_id" || true
+        done
+    sleep 3
+  done
+) &
+
+# ---------- 7. Start gateway ----------
 exec sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789

@@ -63,9 +63,9 @@
       "model": {
         "primary": "claudible/SELECTED_MODEL"
       },
-      "maxConcurrent": 4,
+      "maxConcurrent": 2,
       "subagents": {
-        "maxConcurrent": 8
+        "maxConcurrent": 3
       }
     }
   },

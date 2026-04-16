@@ -86,6 +86,11 @@ while IFS=' ' read -r bot_name port_offset; do
     shm_size: '256m'
     security_opt:
       - seccomp:unconfined
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: 1024m
     restart: unless-stopped
     networks:
       - bot-proxy-net

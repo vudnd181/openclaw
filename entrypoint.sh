@@ -77,7 +77,6 @@ sudo -u node /usr/local/bin/openclaw config set tools.elevated.enabled true 2>/d
 sudo -u node /usr/local/bin/openclaw config set tools.elevated.allowFrom.telegram true 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set tools.exec.ask off 2>/dev/null || true
 sudo -u node /usr/local/bin/openclaw config set plugins.entries.acpx.enabled true 2>/dev/null || true
-sudo -u node /usr/local/bin/openclaw configure --section web 2>/dev/null || true
 
 # ---------- 6. Start gateway ----------
 exec sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789

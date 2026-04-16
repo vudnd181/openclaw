@@ -77,29 +77,5 @@ fi
 # incorrect types (e.g. allowFrom.telegram:true instead of ["telegram"]) and
 # cause the gateway to exit with code 1 on startup.
 
-# ---------- 6. Auto-approve device pairing requests in background ----------
-(
-  while true; do
-    # Get full output for debugging
-    DEVICES_OUT=$(sudo -u node /usr/local/bin/openclaw devices list 2>&1 || true)
-
-    if [ -n "$DEVICES_OUT" ]; then
-      echo "[auto-approve] devices list: $DEVICES_OUT"
-
-      # Extract any hex IDs (UUID or long hex)
-      echo "$DEVICES_OUT" \
-        | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32,}' \
-        | sort -u \
-        | while IFS= read -r req_id; do
-            [ -z "$req_id" ] && continue
-            APPROVE_OUT=$(sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>&1 || true)
-            echo "[auto-approve] approve $req_id → $APPROVE_OUT"
-          done
-    fi
-
-    sleep 1
-  done
-) &
-
-# ---------- 7. Start gateway ----------
+# ---------- 6. Start gateway ----------
 exec sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789

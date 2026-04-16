@@ -228,6 +228,6 @@ curl -s -X DELETE -H "X-API-Key: $OPENCLAW_API_KEY" https://api.yourdomain.com/a
 - Telegram DM policy is `"allowlist"` — only specified chat IDs can message the bot.
 
 
-docker exec -u node openclaw-bot-cuong cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
+docker exec -u node openclaw-bot-vu cat /home/node/.openclaw/openclaw.json 2>/dev/null | grep -A2 '"token"' | head -3
 
 

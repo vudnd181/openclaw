@@ -77,5 +77,45 @@ fi
 # incorrect types (e.g. allowFrom.telegram:true instead of ["telegram"]) and
 # cause the gateway to exit with code 1 on startup.
 
-# ---------- 6. Start gateway ----------
-exec sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789
+# ---------- 6. Start gateway in background, then auto-approve devices ----------
+
+# Start gateway in background (not exec — we need to run the approve loop after it's ready)
+sudo -u node /usr/local/bin/openclaw gateway run --allow-unconfigured --bind lan --port 18789 &
+GATEWAY_PID=$!
+
+# Forward SIGTERM/SIGINT to gateway so Docker shutdown works correctly
+trap 'kill $GATEWAY_PID 2>/dev/null' TERM INT
+
+# Wait for gateway health check (up to 30s)
+echo "[entrypoint] Waiting for gateway to be ready..."
+i=0
+while [ $i -lt 30 ]; do
+  if curl -sf http://localhost:18789/health >/dev/null 2>&1; then
+    echo "[entrypoint] Gateway is ready — starting auto-approve loop"
+    break
+  fi
+  sleep 1
+  i=$((i + 1))
+done
+
+# Auto-approve loop — CLI is already paired so it can connect now that gateway is up
+# NOTE: approve needs the requestId (not deviceId) from `devices list` output
+(
+  while true; do
+    PENDING=$(sudo -u node /usr/local/bin/openclaw devices list 2>/dev/null || true)
+    if [ -n "$PENDING" ]; then
+      echo "$PENDING" \
+        | grep -oE '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' \
+        | sort -u \
+        | while IFS= read -r req_id; do
+            [ -z "$req_id" ] && continue
+            RESULT=$(sudo -u node /usr/local/bin/openclaw devices approve "$req_id" 2>&1 || true)
+            echo "[auto-approve] $req_id → $RESULT"
+          done
+    fi
+    sleep 2
+  done
+) &
+
+# Keep container alive — wait on gateway process
+wait $GATEWAY_PID
